@@ -1,0 +1,420 @@
+<!--
+    Powered By nodeppt - This is probably the best web presentation tool so far!
+    version: 1.4.5
+    site: https://github.com/ksky521/nodeppt
+    date: 
+-->
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Arcgis js + webpack 前端工程化的想法与实践 - By 饶晋玮</title>
+    <link rel="stylesheet" media="all" href="./css/nodeppt.css">
+    <link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="./css/phone.css">
+    
+    <link rel="stylesheet" href="./js/highlight/styles/monokai_sublime.css">
+    <link rel="stylesheet" href="./css/font-awesome.css">
+    
+<link rel="stylesheet" href="./css/theme.moon.css">
+</head>
+<body>
+<div class="slides">
+    <slides id="container">
+        <slide class="slide fill" style="background-image:url('./img/bg.jpg')"><section class="slide-wrapper"><article class="flexbox vcenter">
+<h1>Arcgis+webpack前端工程化初体验</h1>
+<h2><strong>Dist-广州研发部-饶晋玮</strong></h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>第一部分：谈谈现状</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>一切都要从广州一体化项目谈起...</h2>
+<ul class="moveIn">
+<li>地图方面采用<strong>Arcgis jsapi 3.19</strong>版本框架</li>
+<li>Arcgis基于<strong>dojo1.*</strong>，内部采用<strong>AMD</strong>加载方式和模块管理机制</li>
+<li>JS技术栈为<strong>ES5-</strong></li>
+<li>UI层方面采用<strong>Semantic</strong>CSS框架</li>
+<li>组件主要利用dojo提供的<strong>Widget</strong>模板进行定制开发</li>
+<li>利用require([])实现按需加载</li>
+<li>jQuery</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>需要思考的问题</h2>
+<ul class="zoomIn">
+<li>没有采用<strong>ES6+</strong>，无法体验ES6+给我们带来开发时的便利性</li>
+<li>没有采用<strong>CSS预加载器</strong>(less,sass,stylus...)，写css比较费力，难以复用和管理</li>
+<li>没有部署<strong>模块热替换</strong>功能，修改完代码无法实时预览效果，只能手动去刷新浏览器重新加载</li>
+<li>没有采用<strong>Eslint</strong>代码规范化工具，无法统一代码的风格</li>
+<li>部署时需要手动改版本号才能达到清缓存的效果</li>
+<li>正式环境的代码没有进行压缩上传，首屏加载时间相对于测试环境相差不大</li>
+<li>跨组件之通信过多采用dojo/Topic,window变量，容易引起命名冲突，不好管理</li>
+<li>icon-front无法增量更新</li>
+<li>......</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>针对以上问题，如何解决？</h2>
+<ul>
+<li>引入<strong>Babel</strong>为我们编译ES6+</li>
+<li>引入less预编译器</li>
+<li>利用代码压缩工具，人工or自动</li>
+<li>...</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>引入<strong>webpack</strong>构建前端工程化</h2>
+<h2>打造更高效的开发环境</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>第二部分：webpack为何物？</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>&quot;webpack--静态模块打包器&quot;</h2>
+<p>“一切皆为模块”</p>
+<img src="./img/webpack.png"/>
+<p><a href="https://webpack.js.org/" target="_blank">https://webpack.js.org/</a>
+<br>
+<a href="https://webpack.docschina.org/concepts" target="_blank">webpack中文文档</a></p>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>那么，webpack能给我们带来什么？</h2>
+<ul class="moveIn">
+<li>可以更好的配合前端主流框架<strong>(vue、react)</strong>进行相关组件开发</li>
+<li>配合各种<strong>loader</strong>加载器，引入ES6+、postcss、less都不在话下</li>
+<li>利用webpack强大的资源管理功能，帮我们更好的管理和构建模块</li>
+<li>可以配置或者智能分析打包成多个文件，实现<strong>公共模块或者按需加载</strong></li>
+<li>任何用到的资源都可作为模块被import(js/css/图片/字体/)</li>
+<li>利用<strong>webpack-dev-server</strong>,开发时在内存中完成打包，支持热替换，能实时预览修改效果</li>
+<li>支持静态文件名<strong>hash</strong>化，解决缓存问题</li>
+<li>支持环境变量，区分开发环境和生产环境</li>
+<li>将同步依赖文件打包在一起，减少HTTP请求数量</li>
+<li>......</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>第三部分：如何让Arcgis与webpack和谐共处?</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<p>“需要解决的问题”:</p>
+<ul class="zoomIn">
+<li>Arcgis jsapi(dojo)目前采用AMD加载机制，若在模块中使用<code>import XXX from XXX</code>的写法，用webpack默认打包方式去打包，框架无法识别</li>
+<li>如何实现<code>import esriMap from &quot;esri/map&quot;</code>，进而统一采用这种方式去编写;</li>
+<li>如何接入流行的前端框架，去维护我们项目的View层</li>
+<li>如何引入各类loader</li>
+<li>如何更好的跟运维对接</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>一步一个👣，从零开始搭建</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<pre><code class="JavaScript">module.exports = {
+  entry: &quot;./src/main.js&quot;, //入口文件
+  output: {
+    path: path.resolve(__dirname,&#39;dist&#39;),
+    filename: &quot;bundle.js&quot;,
+    libraryTarget: &quot;amd&quot; //核心，打包成AMD模块，让require.js识别
+  },
+  plugins: [],
+  module: {
+    rules: [
+      // 编译ES6
+      {
+        test: /\.js$/,
+        loader: &quot;babel-loader&quot;
+      }
+    ]
+  },
+  externals: [
+    // 核心，遇到&quot;esri/XXX&quot;||&quot;dojo/XXX&quot;...开头的文件，不打包，
+    // 改成define([&quot;esri/XXX&quot;])
+    function(context, request, callback) {
+      if (
+        /^dojo/.test(request) ||
+        /^dojox/.test(request) ||
+        /^dijit/.test(request) ||
+        /^esri/.test(request) ||
+        /^dgp/.test(request)
+      ) {
+        return callback(null, &quot;amd &quot; + request);
+      }
+      callback();
+    }
+  ]
+}
+</code></pre>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<pre><code class="javascript">// main.js
+import Map  from &quot;esri/map&quot;;
+import ArcGISTiledMapServiceLayer from &quot;esri/layers/ArcGISTiledMapServiceLayer&quot;;
+import ArcGISDynamicMapServiceLayer from &quot;esri/layers/ArcGISDynamicMapServiceLayer&quot;;
+
+compile...
+
+// bundle.js
+define([&quot;esri/map&quot;,&quot;esri/layers/ArcGISTiledMapServiceLayer&quot;, 
+&quot;esri/layers/ArcGISDynamicMapServiceLayer&quot;], function(...){
+  ...
+})
+</code></pre>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>第四部分：Arcgis+webpack+前端流行框架讨论</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<p>我分别针对react和vue配合Arcgis+webpack各写了份demo，都已经上传到<a href="https://github.com/shooterRao/arcgis-webpack-demo" target="_blank">github</a>上。配置webpack方面，vue会比react繁琐一点，但是通过<strong>.vue</strong>这种方式去管理和编写组件无疑更加友好。学习成本上，react会比vue陡峭许多，react全家桶(react+redux+react-router)比vue全家桶(vue+vuex+vue-router)更难上手。我针对Arcgis+webpack+vue进行更全面的配置，等下我会细讲和演示。</p>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>下面聊聊Dojo和Vue的区别</h2>
+<div class="columns-2">
+<ul id="newUl" style="list-style: none;">
+<h2><strong>Dojo</strong></h2>
+<li>1.非MVC、MVVM框架</li>
+<li>2.对view层操作只能直接去操作dom</li>
+<li>3.非常重，巨型工具包，有点像加重版的jQuery</li>
+<li>4.提供Widget基本类去编写组件</li>
+<li>5.组件面向对象编程</li>
+<li>6.偏冷门，基于dojo编写的第三方组件非常少</li>
+</ul>
+
+<ul id="newUl" style="list-style: none;">
+<h2><strong>Vue</strong></h2>
+<li>1.现代MVVM框架</li>
+<li>2.数据驱动视图层，对view层操作无须直接操作dom</li>
+<li>3.双向数据绑定，更好地处理用户状态和UI层的联系，数据<=>视图”映射</li>
+<li>4.内部采用virtual-dom和diff算法，性能更好</li>
+<li>5.轻量，组件化，声明式写法</li>
+<li>6.拥有vue-router,vuex，更好地管理单页面应用</li>
+<li>7.vue-loader可以完美利用webpack实现HRM(热替换)，dojo则不行</li>
+<li>8.社区生态完善，学习曲线相对平缓，拥有非常多的高质量的UI库和轮子</li>
+
+</ul>
+</div>
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<ul>
+<li>Dojo对视图层的操作是直接操作dom的，跟jQuery完全相同，虽然直接操作dom很方面，但是，如果开发对dom操作过分依赖，会导致js代码和html严重耦合，牵一发而动全身，维护成本大幅升高</li>
+<li>Vue则是全新的理念，让我更加专注于Model层，减少对dom的依赖和操作，在vue的体系里，一切都是数据的映射</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>也许，Arcgis+webpack+vue真的可以取代dojo</h2>
+
+</hgroup><article>
+
+<p>值得思考的问题🤔</p>
+<ul class="zoomIn">
+<li>如果用vue接替管理项目中的UI层，是否做到前后衔接</li>
+<li>操作地图方面仍旧使用Arcgis jsapi，某些跟地图有关业务同样能使用dojo，只不过上层改为用vue进行管理</li>
+<li>全面采用vue组件化方式编写，现有widget也许可以用vue包装多一层，或者激进点的话,全部用vue组件方式进行重写，这样成本大不大?</li>
+<li>......</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>针对vue，我做了一个有点大的demo</h2>
+<p>依旧从0️⃣开始搭建</p>
+<ul class="zoomIn">
+<li>引入babel-loader,实现编译ES6+✅</li>
+<li>引入postCss中autoprefixer以及lessCSS预处理器✅</li>
+<li>引入url-loader处理静态文件✅</li>
+<li>引入vue-loader处理.vue文件✅</li>
+<li>本地开发服务器采用webpack-dev-server✅</li>
+<li>开发环境和生产环境webpack配置相分离✅</li>
+<li>启用HRM，实现代码修改浏览器实时预览✅</li>
+<li>生产环境代码压缩，加上hash指纹✅</li>
+<li>分离node_module下的模块(vue,axios)✅</li>
+<li>Arcgis可以实现import引入，没有采用Esri-loader加载机制✅</li>
+<li>Eslint代码检验❌</li>
+<li>webpack打包速度优化❌</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>Demo演示👀</h2>
+
+</hgroup><article>
+
+<p>环境：
+node.js:10.1
+webpack:4.8.3
+arcgis-jsapi:3.24
+vue:2.5.16</p>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>再加一个和本次分享主题无关的...🍩</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>如何紧跟前端发展的步伐，借这机会分享下我的看法</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>目前前端的状况...</h2>
+<ul class="bounceIn">
+<li>时代在变，前端也在变</li>
+<li>前后端分离，前端工作量已不同往日</li>
+<li>前端不是页面仔，我们可以写小程序、app、桌面客户端，甚至还可以写接口</li>
+<li>面对前端的变化，我们应该去包容去学习，不断提高自身核心竞争力</li>
+<li>以不变应对万变，前端底层是不变的，巩固基础</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<ul>
+<li>关注开源社区和技术论坛，关注前沿技术，关注前端动向</li>
+<li>多逛逛github、掘金、SegmentFault等著名社区</li>
+<li>关注github上的大佬，看看他们每天都在star些啥，follow了哪些人</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<ul>
+<li>订阅技术周刊，多逛国外论坛</li>
+<li>这里重点推荐
+<a href="https://medium.com/" target="_blank">Medium</a>,
+<a href="https://css-tricks.com/" target="_blank">css-tricks</a>,
+<a href="https://frontendfront.com/" target="_blank">国外前端新闻</a></li>
+<li>还可以订阅前端周刊，国外的
+如<a href="https://javascriptweekly.com/issues" target="_blank">JavaScript Weekly</a></li>
+<li>国内高质量知乎专栏
+<a href="https://zhuanlan.zhihu.com/qianduanzhidian" target="_blank">前端之巅</a>
+<a href="https://zhuanlan.zhihu.com/feweekly" target="_blank">前端周刊</a>
+<a href="https://zhuanlan.zhihu.com/ElemeFE" target="_blank">饿了么前端</a>
+<a href="https://zhuanlan.zhihu.com/ddfe-weekly" target="_blank">滴滴前端周刊</a></li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>多造轮子,多实践</h2>
+<ul>
+<li><p>关注github上✨比较多的项目(轮子)，尝试去读里面的源码，看看大牛们是怎样写代码的，学学他们的思想以及编程技巧，如果发现了bug可以尝试去修复，然后提PR，如果成功合并，那么你成为了贡献者，是非常有成就感的。你也可以结合自己的思考模仿一个出来，或者彻底重写。</p>
+</li>
+<li><p>把我们平时在项目中自己写的一些组件从业务中解出来，再封装成可以高度复用的组件，开源出去，也是一种很好方式</p>
+</li>
+</ul>
+<blockquote>
+<p>我听一个前端大牛说，唯有多造轮子才能不断进步</p>
+</blockquote>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<p>坚持写博客，不断沉淀</p>
+<div style="width: 100%;height: 100%">
+<iframe height="100%" width="100%" data-src="http://shooterblog.site/" src="about:blank;"></iframe>
+</div>
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article>
+<h2>如何搭建个人博客？</h2>
+<ul class="zoomIn">
+<li>Hexo+gitPage</li>
+<li>WordPress</li>
+<li>自己写一个博客系统Vue(React)+Nodejs+MongoDB</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article class="flexbox vcenter">
+<h1>面对有趣的新技术，新工具🔧</h1>
+<h2>好奇 =&gt; 探索 =&gt; 发现 =&gt; 实践</h2>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article class="flexbox vcenter">
+<h1>谢谢聆听！</h1>
+
+</article></section></slide>
+        
+
+        <!-- <slide class="slide logoslide dark nobackground">
+            <article class="flexbox vcenter">
+                <h2 style="color: white;">Powered By nodeppt v1.4.5</h2>
+            </article>
+        </slide> -->
+        <div class="slideTip" id="tip"></div>
+    </slides>
+</div>
+<canvas id="drawBoard" class="draw-board" width="900" height="700"></canvas>
+<div class="progress"><span id="progress"></span></div>
+<div id="_buttons">
+    <div class="_btn-box" id="_btn-box" style="display:none;">
+        <button class="fa fa-arrow-circle-left" id="_btn-prev"></button>
+        <button class="fa fa-arrow-circle-right" id="_btn-next"></button>
+        <button class="fa fa-paint-brush" id="_btn-brush"></button>
+        <button class="fa fa-compress" id="_btn-overview" data-toggle="fa fa-expand"></button>
+    </div>
+    <button class="fa fa-bars" id="_btn-bar"  data-toggle="fa fa-close"></button>
+</div>
+<script src="./js/mixjs/lib/mix.0.3.0.min.js"></script>
+<script>
+    var ASSET_RELATIVE_DIR = ".";
+</script>
+<script>
+var base = location.protocol + '//' + location.host;
+
+var path = (location.pathname + '#').split('/').filter(function(v){
+    return !!v;
+});
+path.pop();
+path = path.join('/');
+if (typeof ASSET_RELATIVE_DIR === 'string') {
+    path = path + '/' + ASSET_RELATIVE_DIR;
+}
+MixJS.config({
+    baseURL: [ base, path, 'js'].join('/')+'/'
+});
+
+</script>
+<script src="./js/mixjs/lib/event/broadcast.js"></script>
+<script src="./js/nodeppt.js"></script>
+<script>
+Slide.init({
+    containerID: 'container',
+    drawBoardID: 'drawBoard',
+    slideClass: '.slide',
+    buildClass: '.build',
+    progressID: 'progress',
+    transition: 'move',
+    width: 1100,
+    dir: './',
+    
+    //打开下面的注释就开启postMessage方式
+    //访问网址127.0.0.1:8080/ppt/demo#client
+    control:{
+        type: 'postMessage',
+        args:{
+            isControl:  false
+        }
+    },
+    
+    tipID: 'tip'
+});
+MixJS.loadJS('highlight/highlight.pack.js',function(){
+    hljs.tabReplace = '  ';
+    hljs.initHighlightingOnLoad();
+});
+</script>
+<link rel="stylesheet" href="./css/main.css">
+/img
+
+<!--placeholder-->
+</body>
+</html>
