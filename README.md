@@ -4,6 +4,8 @@
 
 ## PPT在线预览地址
 
+[点击预览ppt](http://shooterblog.site/Arcgis-webpack-PPT/publish/)
+
 ## 感谢
 
 [nodeppt](https://github.com/ksky521/nodeppt)
